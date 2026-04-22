@@ -511,6 +511,7 @@
                 this.shieldTimer = 0;
                 this.keysRequired = level.keysRequired || 0;
                 
+                this.keysOnMap = [];
                 this.coins = [];
                 this.enemies = [];
                 this.doors = [];
@@ -534,8 +535,8 @@
                                 break;
                                 
                             case TILE_TYPES.KEY:
+                                this.keysOnMap.push({ x, y, collected: false, bobOffset: Math.random() * Math.PI * 2 });
                                 this.grid[y][x] = TILE_TYPES.EMPTY;
-                                this.keys++;
                                 break;
                                 
                             case TILE_TYPES.DOOR:
@@ -740,6 +741,14 @@
                     }
                 }
                 
+                this.keysOnMap.forEach(key => {
+                    if (!key.collected && key.x === px && key.y === py) {
+                        key.collected = true;
+                        this.keys++;
+                        this.score += 50;
+                    }
+                });
+                
                 this.coins.forEach(coin => {
                     if (!coin.collected && coin.x === px && coin.y === py) {
                         coin.collected = true;
@@ -938,6 +947,12 @@
                     this.drawTrap(ctx, trap.x * TILE_SIZE, trap.y * TILE_SIZE, trap.phase);
                 });
                 
+                this.keysOnMap.forEach(key => {
+                    if (!key.collected) {
+                        this.drawKey(ctx, key.x * TILE_SIZE, key.y * TILE_SIZE, key.bobOffset);
+                    }
+                });
+                
                 this.coins.forEach(coin => {
                     if (!coin.collected) {
                         this.drawCoin(ctx, coin.x * TILE_SIZE, coin.y * TILE_SIZE, coin.bobOffset);
@@ -1119,6 +1134,40 @@
                 ctx.lineWidth = 2;
                 ctx.beginPath();
                 ctx.arc(0, 0, 8, 0, Math.PI * 2);
+                ctx.stroke();
+                
+                ctx.restore();
+            }
+            
+            drawKey(ctx, x, y, bobOffset) {
+                const size = TILE_SIZE;
+                const centerX = x + size / 2;
+                const centerY = y + size / 2;
+                const bob = Math.sin(bobOffset) * 3;
+                const scale = 0.8 + Math.sin(bobOffset * 2) * 0.1;
+                
+                ctx.save();
+                ctx.translate(centerX, centerY + bob);
+                ctx.scale(scale, scale);
+                
+                ctx.fillStyle = 'rgba(159, 122, 234, 0.3)';
+                ctx.beginPath();
+                ctx.arc(0, 0, 14, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.fillStyle = COLORS.key;
+                ctx.beginPath();
+                ctx.arc(-4, -4, 6, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.fillRect(-4, 0, 3, 10);
+                ctx.fillRect(-4, 6, 6, 3);
+                ctx.fillRect(-4, 10, 4, 3);
+                
+                ctx.strokeStyle = COLORS.keyGlow;
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.arc(-4, -4, 6, 0, Math.PI * 2);
                 ctx.stroke();
                 
                 ctx.restore();
